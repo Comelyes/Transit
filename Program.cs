@@ -18,8 +18,8 @@ app.UseAuthorization();
 
 app.Run();
 
+// Сервер - 31.31.196.202
+// База - u1720650_transit
+// Логин - u1720650_admin
+// Пароль - 5*67Kym1f
 
-// 5*67Kym1f
-// u1720650_transit
-// u1720650_admin
-// 31.31.196.202
