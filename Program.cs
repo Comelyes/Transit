@@ -1,9 +1,15 @@
 ﻿using Transit;
+using Transit.Scripts;
 
 Notifications notifications = new Notifications();
 notifications.Initialize();
 
 Logic.Initialize();
+
+
+ControlSystem controlSystem = new ControlSystem();
+//controlSystem.Start();
+Task.Run(controlSystem.Start);
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();

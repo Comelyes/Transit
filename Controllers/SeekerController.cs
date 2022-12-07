@@ -53,60 +53,63 @@ public class SeekerController : Controller
     {
         var s = Request.HttpContext.Connection.RemoteIpAddress.MapToIPv4().ToString();
         Console.WriteLine($"New request from {s} at {DateTime.UtcNow.ToString()}");
-
-        DateTime startTimeFilter = fromTime == "0" ? DateTime.MinValue : DateTime.Parse(fromTime);
-        DateTime endTimeFilter = endTime == "0" ? DateTime.UtcNow : DateTime.Parse(endTime); 
-        
-        string checkId = $"SELECT * FROM Workers WHERE Id = {id}";
  
-        using (SqlConnection connection = new SqlConnection(Settings.ConnectionInfo))
-        {
-            await connection.OpenAsync();
-            SqlCommand command = new SqlCommand(checkId, connection);
-            SqlDataReader reader = await command.ExecuteReaderAsync();
-            if (!reader.HasRows)
-            {
-                return "No Access";
-            }
-        }
-        
-        string sqlExpression = "sp_GetAllSeekersInfo";
-
-        using (SqlConnection connection = new SqlConnection(Settings.ConnectionInfo))
-        {
-            connection.Open();
-            SqlCommand command = new SqlCommand(sqlExpression, connection);
-            command.CommandType = CommandType.StoredProcedure;
-
-            SqlDataReader reader = await command.ExecuteReaderAsync();
-            if (reader.HasRows) 
-            {
-                List<SerializerSeekersInfo> seekers = new();
-                while (await reader.ReadAsync())
-                {
-                    SerializerSeekersInfo seeker = new () 
-                    {
-                        Id = reader.GetInt32(0),
-                        Name = reader.GetString(1),
-                        LastName = reader.GetString(2),
-                        Patronymic = reader.GetString(3),
-                        PostName = reader.GetString(4),
-                        SuperVisorName = reader.GetString(5),
-                        FirstMeetTime = reader.GetString(6),
-                        Status = Statement.GetStringStatusRus((StatementStatus)reader.GetInt32(7)),
-                        Value = reader.GetInt32(8),
-                        PassTime = reader.GetString(9)
-                    };
-                    if (startTimeFilter > DateTime.Parse(seeker.FirstMeetTime) || endTimeFilter < DateTime.Parse(seeker.FirstMeetTime))
-                        continue;
-                    seekers.Add(seeker);
-                }
-                
-                await reader.CloseAsync();
-                return JsonConvert.SerializeObject(seekers, Formatting.Indented);
-            }
-            
-            return $"No data";
-        }
+        DateTime startTimeFilter = fromTime == "0" ? DateTime.MinValue : DateTime.Parse(fromTime);
+         DateTime endTimeFilter = endTime == "0" ? DateTime.UtcNow : DateTime.Parse(endTime); 
+         
+         string checkId = $"SELECT * FROM Workers WHERE Id = {id}";
+  
+         using (SqlConnection connection = new SqlConnection(Settings.ConnectionInfo))
+         {
+             await connection.OpenAsync();
+             SqlCommand command = new SqlCommand(checkId, connection);
+             SqlDataReader reader = await command.ExecuteReaderAsync();
+             if (!reader.HasRows)
+             {
+                 return "No Access";
+             }
+         }
+         
+         string sqlExpression = "sp_GetAllSeekersInfo";
+ 
+         using (SqlConnection connection = new SqlConnection(Settings.ConnectionInfo))
+         {
+             connection.Open();
+             SqlCommand command = new SqlCommand(sqlExpression, connection);
+             command.CommandType = CommandType.StoredProcedure;
+ 
+             SqlDataReader reader = await command.ExecuteReaderAsync();
+             if (reader.HasRows) 
+             {
+                 List<SerializerSeekersInfo> seekers = new();
+                 while (await reader.ReadAsync())
+                 {
+                     SerializerSeekersInfo seeker = new () 
+                     {
+                         Id = reader.GetInt32(0),
+                         Name = reader.GetString(1),
+                         LastName = reader.GetString(2),
+                         Patronymic = reader.GetString(3),
+                         PostName = reader.GetString(4),
+                         SuperVisorName = reader.GetString(5),
+                         FirstMeetTime = reader.GetString(6),
+                         Status = Statement.GetStringStatusRus((StatementStatus)reader.GetInt32(7)),
+                         Value = reader.GetInt32(8),
+                         PassTime = reader.GetString(9)
+                     };
+                     var firstMeetTime = DateTime.Parse(seeker.FirstMeetTime);
+                     var passTime = DateTime.Parse(seeker.FirstMeetTime);
+                     if (startTimeFilter > firstMeetTime || endTimeFilter < passTime )
+                         continue;
+                     var workTime = passTime - firstMeetTime;
+                     seeker.SystemValue = seeker.Value / (workTime.Days + 1);
+                     seekers.Add(seeker);
+                 }
+                 
+                 await reader.CloseAsync();
+                 return JsonConvert.SerializeObject(seekers, Formatting.Indented);
+             }
+             return $"No data";
+         }
     }
 }

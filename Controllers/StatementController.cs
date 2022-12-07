@@ -14,8 +14,8 @@ public class StatementController : Controller
     public async Task<string> AddNewStatement (int seekerId, int status, int superVisorId, int value)
     {
         var s = Request.HttpContext.Connection.RemoteIpAddress.MapToIPv4().ToString();
-        Console.WriteLine($"New request from {s} at {DateTime.UtcNow.ToString()}");
-
+        Console.WriteLine($"New request (Add new statement) from {s} at {DateTime.UtcNow.ToString()}");
+        
         string sqlExpression = "sp_InsertStatement";
         using (SqlConnection connection = new SqlConnection(Settings.ConnectionInfo))
         {

@@ -25,9 +25,3 @@ public class Statement
     }
 }
 
-public enum StatementStatus
-{
-    Created = 1,
-    Done,
-    Checked
-}

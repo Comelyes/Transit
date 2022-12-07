@@ -20,7 +20,7 @@ public static class Procedures
     public static async Task AddPrInsertStatement()
     {
         var sql =
-            "CREATE PROCEDURE [sp_InsertStatement] @seekerid int, @status int, @value int, @supervisorid int, @passtime nvarchar(100)" +
+            "CREATE PROCEDURE [sp_InsertStatement] @seekerid int, @status int, @value int, @supervisorid int, @passtime nvarchar(100) " +
             "AS INSERT INTO Statements (SeekerId, Status, Value, SuperVisorId, PassTime) VALUES (@seekerid, @status, @value, @supervisorid, @passtime) " +
             "SELECT SCOPE_IDENTITY() GO";
         await CustomSqlCommands.PerformSqlCommand(sql);
@@ -45,5 +45,16 @@ public static class Procedures
                  "INNER JOIN Workers ON Seekers.WorkerId = Workers.Id" +
                  "GO";
             await CustomSqlCommands.PerformSqlCommand(sql);
+    }
+    public static async Task AddPrCheckStatementPassTime()
+    {
+        var sql = "CREATE PROCEDURE sp_CheckStatementPassTime " +
+                  "AS " +
+                  "SELECT Statements.Id, " +
+                  "Statements.Status, Statements.Value, Statements.PassTime, Seekers.TaskTime " +
+                  "FROM Statements " +
+                  "INNER JOIN Seekers ON Statements.SeekerId = Seekers.Id " +
+                  "";
+        await CustomSqlCommands.PerformSqlCommand(sql);
     }
 }

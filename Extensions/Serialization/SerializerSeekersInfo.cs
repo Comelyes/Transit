@@ -11,6 +11,7 @@ public class SerializerSeekersInfo
     public string FirstMeetTime;
     public string Status;
     public int Value;
+    public float SystemValue;
     public string PassTime;
     
 }
