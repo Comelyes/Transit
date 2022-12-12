@@ -9,9 +9,15 @@ namespace Transit.Controllers;
 
 public class StatementController : Controller
 {
+    /// <summary>
+    /// Добавление нового задания 
+    /// </summary>
+    /// <param name="seekerId">Соискатель (id)</param>
+    /// <param name="superVisorId">Руководитель (id)</param>
+    /// <returns>Id новой записи</returns>
     [HttpPost]
     [Route("/api/newstatement")]
-    public async Task<string> AddNewStatement (int seekerId, int status, int superVisorId, int value)
+    public async Task<string> AddNewStatement (int seekerId, int superVisorId)
     {
         var s = Request.HttpContext.Connection.RemoteIpAddress.MapToIPv4().ToString();
         Console.WriteLine($"New request (Add new statement) from {s} at {DateTime.UtcNow.ToString()}");
@@ -23,9 +29,9 @@ public class StatementController : Controller
             SqlCommand command = new SqlCommand(sqlExpression, connection);
             command.CommandType = CommandType.StoredProcedure;
             
-            SqlParameter param1 = new SqlParameter("@status", status);
+            SqlParameter param1 = new SqlParameter("@status", StatementStatus.Created.GetHashCode());
             command.Parameters.Add(param1);
-            SqlParameter param2 = new SqlParameter("@value", value);
+            SqlParameter param2 = new SqlParameter("@value", -1);
             command.Parameters.Add(param2);
             SqlParameter param3 = new SqlParameter("@seekerid", seekerId);
             command.Parameters.Add(param3);
@@ -36,11 +42,19 @@ public class StatementController : Controller
 
             var result = command.ExecuteScalar();
 
-            Notifications.Instance.StatementStatusChanged?.Invoke(Decimal.ToInt32((decimal)result), status);
+            Notifications.Instance.StatementStatusChanged?.Invoke(Decimal.ToInt32((decimal)result), StatementStatus.Created.GetHashCode());
             return $"{result}";
         }
     }
 
+    /// <summary>
+    /// Обновление данных задания
+    /// </summary>
+    /// <param name="statementId">Задание (Id)</param>
+    /// <param name="status">Статус </param>
+    /// <param name="value">Оценка</param>
+    /// <param name="passTime">Фактическое время сдачи задания</param>
+    /// <returns>Количество обновленных записей</returns>
     [HttpPost]
     [Route("/api/updatestatement")]
     public async Task<string> UpdateStatement(int statementId, int status, int value, string passTime = "0")
@@ -77,6 +91,11 @@ public class StatementController : Controller
         }
     }
 
+    /// <summary>
+    /// Получение данных о задании
+    /// </summary>
+    /// <param name="statementId">Задание (Id)</param>
+    /// <returns>Задание формата JSON или 0 при отстутствии совпадений</returns>
     [HttpPost]
     [Route("/api/getstatement")]
     public async Task<string> GetStatement (int statementId)

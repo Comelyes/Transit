@@ -19,6 +19,8 @@ public class Statement
                 return "Закончен";
             case StatementStatus.Checked:
                 return "Проверен";
+            case StatementStatus.Expired:
+                return "Просрочен";
             default:
                 return "Error in status!";
         }

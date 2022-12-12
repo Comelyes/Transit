@@ -9,6 +9,17 @@ namespace Transit.Controllers;
 
 public class SeekerController : Controller
 {
+    /// <summary>
+    /// Добавление нового соискателя
+    /// </summary>
+    /// <param name="name">Имя</param>
+    /// <param name="lastName">Фамилия</param>
+    /// <param name="number">Номер телефона</param>
+    /// <param name="patronymic">Отчество</param>
+    /// <param name="postId">Желаемая должность (id)</param>
+    /// <param name="taskTime">Время сдачи задания</param>
+    /// <param name="workerId">Работник отдела кадров</param>
+    /// <returns>Id новой записи</returns>
     [HttpPost]
     [Route("/api/newseeker")]
     public async Task<string> AddNewSeeker(string name, string lastName, int number, string patronymic, int postId, string taskTime, int workerId )
@@ -46,17 +57,22 @@ public class SeekerController : Controller
             return $"{result}";
         }
     }
-
+    
+/// <summary>
+/// Вывходит всех соискателей за определенный период ремени
+/// </summary>
+/// <param name="id">Айди работника(Если нет в базе данных, не выдаст результат)</param>
+/// <param name="fromTime">Начальная дата</param>
+/// <param name="endTime">Конечная дата</param>
+/// <returns>JSON</returns>
     [HttpPost]
     [Route("/api/seekersinfo")]
     public async Task<string> GetAllSeekersInfo (int id, string fromTime = "0", string endTime = "0")
     {
         var s = Request.HttpContext.Connection.RemoteIpAddress.MapToIPv4().ToString();
         Console.WriteLine($"New request from {s} at {DateTime.UtcNow.ToString()}");
- 
-        DateTime startTimeFilter = fromTime == "0" ? DateTime.MinValue : DateTime.Parse(fromTime);
-         DateTime endTimeFilter = endTime == "0" ? DateTime.UtcNow : DateTime.Parse(endTime); 
-         
+        
+         //Проверка на наличие работника в БД
          string checkId = $"SELECT * FROM Workers WHERE Id = {id}";
   
          using (SqlConnection connection = new SqlConnection(Settings.ConnectionInfo))
@@ -70,8 +86,11 @@ public class SeekerController : Controller
              }
          }
          
+         // Вывод всех соискателей с фильтром
          string sqlExpression = "sp_GetAllSeekersInfo";
- 
+         DateTime startTimeFilter = fromTime == "0" ? DateTime.MinValue : DateTime.Parse(fromTime);
+         DateTime endTimeFilter = endTime == "0" ? DateTime.UtcNow : DateTime.Parse(endTime); 
+         
          using (SqlConnection connection = new SqlConnection(Settings.ConnectionInfo))
          {
              connection.Open();

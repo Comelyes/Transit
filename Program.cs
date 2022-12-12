@@ -4,11 +4,10 @@ using Transit.Scripts;
 Notifications notifications = new Notifications();
 notifications.Initialize();
 
-Logic.Initialize();
+//Logic.Initialize(); // Инициализация БД
 
 
 ControlSystem controlSystem = new ControlSystem();
-//controlSystem.Start();
 Task.Run(controlSystem.Start);
 
 var builder = WebApplication.CreateBuilder(args);

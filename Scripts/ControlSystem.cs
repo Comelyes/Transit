@@ -9,6 +9,9 @@ using Transit.Models;
 
 namespace Transit.Scripts;
 
+/// <summary>
+/// Следящая система, исполняет логику контроля просроченных заданий 
+/// </summary>
 public class ControlSystem
 {
     private bool _stop = false;
@@ -40,7 +43,6 @@ public class ControlSystem
         catch (Exception e)
         {
             Console.WriteLine(e);
-            throw;
         }
     }
 
@@ -72,15 +74,15 @@ public class ControlSystem
                     var passTime = DateTime.UtcNow;
                     
                     //TODO: Update data and test 
-                    var data = $"statementId={id}&status={status}&value={value}&passTime={passTime}";
-                    var response = ApiRequests.PostRequest("https://localhost:7179/api/updatestatement", data);
+                    var data = $"statementId={id}&status={status}&value={value}&passTime={passTime}"; 
+                    ApiRequests.PostRequest("https://localhost:7179/api/updatestatement", data);
                 }
             }
             await reader.CloseAsync();
         }
         else
         {
-            Console.WriteLine($"No expired statement");
+            Console.WriteLine($"No statements");
         }
     }
 
