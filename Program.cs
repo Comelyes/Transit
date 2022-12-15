@@ -4,7 +4,7 @@ using Transit.Scripts;
 Notifications notifications = new Notifications();
 notifications.Initialize();
 
-//Logic.Initialize(); // Инициализация БД
+_ = Logic.Initialize(); // Инициализация БД
 
 
 ControlSystem controlSystem = new ControlSystem();
