@@ -3,6 +3,7 @@ using Microsoft.Data.SqlClient;
 using Newtonsoft.Json;
 using Transit.Extensions;
 using Transit.Models;
+using Transit.Scripts.ForTest;
 
 namespace Transit;
 
@@ -13,7 +14,7 @@ public static class Logic
         try
         {
             //await InitializeDB();
-            //await TestInsertJson(); // test json
+            JsonCRUD.StartTest();
         }
         catch (Exception e)
         {
@@ -21,70 +22,6 @@ public static class Logic
             throw;
         }
     }
-
-    public class Account
-    {
-        public string Name { get; set; }
-        public int SomeInt { get; set; }
-    }
-    private static async Task TestInsertJson()
-    {
-        string sqlExpression = "sp_TestInsertJson";
-        using (SqlConnection connection = new SqlConnection(Settings.ConnectionInfo))
-        {
-            connection.Open();
-            SqlCommand command = new SqlCommand(sqlExpression, connection);
-            command.CommandType = CommandType.StoredProcedure;
-            
-            Account account = new Account
-            {
-                Name = "james",
-                SomeInt = 28
-            };
-            Dictionary<string, Account> dict = new();
-            dict.Add("TestTable", account);
-
-            string json = JsonConvert.SerializeObject(account, Formatting.Indented);
-            string jsonTable = JsonConvert.SerializeObject(dict, Formatting.Indented);
-
-            Console.WriteLine(json);
-            Console.WriteLine(jsonTable);
-            
-            SqlParameter param1 = new SqlParameter("@json", jsonTable);
-            command.Parameters.Add(param1);
-            
-            var result = command.ExecuteScalar();
-            Console.WriteLine($"Result db = {result}");
-
-        }
-    }
-    /*CREATE PROCEDURE sp_TestInsertJson @json NVARCHAR(MAX)
-AS 
-INSERT INTO TestTable
-SELECT * 
-FROM OPENJSON(@json, '$.TestTable')
-WITH  (  
-        Name   varchar(60)     '$.Name', 
-        SomeInt   INT      '$.SomeInt'
-    )
-GO*/
-    
-    /*
-     * DECLARE @json NVARCHAR(MAX) = N'{ 
-    "TestTable" : {
-            "Name" : "Name2",
-            "SomeInt" : 26 
-    }
-}';
-
-INSERT INTO TestTable
-SELECT * 
-FROM OPENJSON(@json, '$.TestTable')
-WITH  (  
-        Name   varchar(60)     '$.Name', 
-        SomeInt   INT      '$.SomeInt'
-    )
-     */
     
     private static async Task InitializeDB()
     {
