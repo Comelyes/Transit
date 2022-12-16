@@ -1,6 +1,7 @@
 using System.Data;
 using Microsoft.Data.SqlClient;
 using Newtonsoft.Json;
+using Transit.DbJSON;
 using Transit.Extensions;
 using Transit.Models;
 using Transit.Scripts.ForTest;
@@ -14,7 +15,8 @@ public static class Logic
         try
         {
             //await InitializeDB();
-            JsonCRUD.StartTest();
+            JsonProcedures.StartTest();
+            JsonCrud.Test();
         }
         catch (Exception e)
         {
