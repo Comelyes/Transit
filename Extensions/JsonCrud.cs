@@ -38,8 +38,8 @@ public static class JsonCrud
         //TestAttr<TestTable>();
         Console.WriteLine($"Result = {GetFieldData<TestTable>()}");
 
-        var t = InsertJsonToTable<TestTable>(jsonTable);
-        t.Wait();
+        //var t = InsertJsonToTable<TestTable>(jsonTable);
+        //t.Wait();
 
         var b = ReadTableJson<TestTable>();
         b.Wait();
@@ -80,9 +80,14 @@ public static class JsonCrud
     private static string GetTypeSqlFromtype(Type type)
     {
         if (type == typeof(string))
-            return "VARCHAR(200)";
-        else if (type == typeof(int))
+            return $"VARCHAR({Settings.VarcharLenght})";
+        if (type == typeof(int))
             return "INT";
+        if (type == typeof(float))
+            return "FLOAT";
+        if (type == typeof(bool))
+            return "BOOL";
+
         throw new ArgumentException("Invalid type if method");
     }
     
@@ -108,7 +113,8 @@ public static class JsonCrud
             Console.WriteLine($"Result db = {result} and ");
 
             var dict = JsonConvert.DeserializeObject<Dictionary<string,List<T>>>(result.ToString());
-            return dict.Values.GetEnumerator().Current;
+            var res = dict.Values.GetEnumerator().Current;
+            return res;
         }
     }
     
