@@ -13,7 +13,7 @@ namespace Transit.DbJSON;
 
 public static class JsonCrud
 {
-    public static void Test()
+    public static async void Test()
     {
         TestTable account = new TestTable
         {
@@ -27,7 +27,8 @@ public static class JsonCrud
         };
         List<TestTable> tables = new List<TestTable>();
         tables.Add(account);
-        tables.Add(account2);
+        //tables.Add(account2);
+        
         Dictionary<string, List<TestTable>> dict = new();
         dict.Add(account.GetType().Name, tables);
             
@@ -35,19 +36,20 @@ public static class JsonCrud
             
         Console.WriteLine(jsonTable);
         
-        //TestAttr<TestTable>();
+        
         Console.WriteLine($"Result = {GetFieldData<TestTable>()}");
 
         //var t = InsertJsonToTable<TestTable>(jsonTable);
         //t.Wait();
 
-        var b = ReadTableJson<TestTable>();
-        b.Wait();
-        Console.WriteLine(b.Result);
+        var b = await ReadTableJson<TestTable>("WHERE Id = 2");
+        
+        Console.WriteLine(b.Count);
     }
 
     private static string GetFieldData<T>(
-        BindingFlags bindingFlags = BindingFlags.Instance | BindingFlags.Public)
+        BindingFlags bindingFlags = BindingFlags.Instance | BindingFlags.Public,
+        bool includePrimaryKey = false)
     {
         StringBuilder builder = new StringBuilder();
         
@@ -65,6 +67,10 @@ public static class JsonCrud
             if (varcharAttribute != null )
             {
                 builder.Append($" {field.Name} varchar({varcharAttribute.Count}) '$.{field.Name}' ");
+            }
+            else if (field.GetCustomAttribute<PrimaryKeyAttribute>() != null && !includePrimaryKey)
+            {
+                Console.WriteLine($"There are primary key, we not include him!");
             }
             else
             {
@@ -95,11 +101,11 @@ public static class JsonCrud
     /// 
     /// </summary>
     /// <returns>JSON string</returns>
-    private static async Task<List<T>> ReadTableJson<T>()
+    private static async Task<List<T>> ReadTableJson<T>(string Where = "")
     {
-        string sqlExpression = $" SELECT * FROM {typeof(T).Name} " +
+        string sqlExpression = $" SELECT * FROM {typeof(T).Name} {Where} " +
                                $"FOR JSON AUTO, ROOT('{typeof(T).Name}'), INCLUDE_NULL_VALUES ";
-        // FOR JSON AUTO/PATH(when declare AS), ROOT('name'), INCLUDE_NULL_VALUES, WITHOUT_ARRAY_WRAPPER
+        Console.WriteLine($"New sql Expression: \n {sqlExpression} ");
         using (SqlConnection connection = new SqlConnection(Settings.ConnectionInfo))
         {
             await connection.OpenAsync();
@@ -112,16 +118,42 @@ public static class JsonCrud
             var result = await command.ExecuteScalarAsync();
             Console.WriteLine($"Result db = {result} and ");
 
-            var dict = JsonConvert.DeserializeObject<Dictionary<string,List<T>>>(result.ToString());
-            var res = dict.Values.GetEnumerator().Current;
-            return res;
+            try
+            {
+                var dict = JsonConvert.DeserializeObject<Dictionary<string,List<T>>>(result.ToString());
+                var res = dict[$"{typeof(T).Name}"];
+                return res;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
         }
     }
     
+    
+    private static async Task UpdateJsonInTable<T>(string json)
+    {
+        string sqlExpression = $"INSERT INTO {typeof(T).Name} SELECT * FROM OPENJSON(@json, '$.{typeof(T).Name}') " +
+                               $"WITH  ( {GetFieldData<T>()} )"; // Name   varchar(60)     '$.Name', SomeInt   INT  '$.SomeInt'
+        Console.WriteLine($"New sql Expression: \n {sqlExpression} ");
+        using (SqlConnection connection = new SqlConnection(Settings.ConnectionInfo))
+        {
+            await connection.OpenAsync();
+            SqlCommand command = new SqlCommand(sqlExpression, connection);
+            command.Parameters.Add(new SqlParameter("@json", json));
+            
+            Console.WriteLine($"Try insert json: {json}");
+            var result = await command.ExecuteNonQueryAsync();
+            Console.WriteLine($"Result db = {result}");
+        }
+    }
     private static async Task InsertJsonToTable<T>(string json)
     {
         string sqlExpression = $"INSERT INTO {typeof(T).Name} SELECT * FROM OPENJSON(@json, '$.{typeof(T).Name}') " +
                                $"WITH  ( {GetFieldData<T>()} )"; // Name   varchar(60)     '$.Name', SomeInt   INT  '$.SomeInt'
+        Console.WriteLine($"New sql Expression: \n {sqlExpression} ");
         using (SqlConnection connection = new SqlConnection(Settings.ConnectionInfo))
         {
             await connection.OpenAsync();
