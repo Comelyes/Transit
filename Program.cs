@@ -1,5 +1,6 @@
 ﻿using Transit;
 using Transit.Scripts;
+using Transit.Services;
 
 Notifications notifications = new Notifications();
 notifications.Initialize();
@@ -7,12 +8,14 @@ notifications.Initialize();
 _ = Logic.Initialize(); // Инициализация БД
 
 
-ControlSystem controlSystem = new ControlSystem();
-Task.Run(controlSystem.Start);
+//ControlSystem controlSystem = new ControlSystem();
+//Task.Run(controlSystem.Start);
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
+builder.Services.AddHostedService<StatementExpirationService>();
 var app = builder.Build();
+
 
 app.MapControllerRoute(
     name: "default",
